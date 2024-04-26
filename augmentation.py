@@ -148,19 +148,19 @@ class Augmentation:
                     self.shape = self.image.shape
                     self.bbox = bboxes[i].copy()
 
-                    # self.__translate__()
-                    # self.__rotate__()
-                    # self.__scale__()
-                    # self.__stretch__()
-                    # self.__shear__()
+                    self.__translate__()
+                    self.__rotate__()
+                    self.__scale__()
+                    self.__stretch__()
+                    self.__shear__()
 
-                    # self.__vertical_flip__()
-                    # self.__horizontal_flip__()
+                    self.__vertical_flip__()
+                    self.__horizontal_flip__()
 
-                    # self.__monochrome__()
-                    # self.__hsv__()
-                    # self.__contrast__()
-                    # self.__sharpness__()
+                    self.__monochrome__()
+                    self.__hsv__()
+                    self.__contrast__()
+                    self.__sharpness__()
 
                     output = [self.image, self.bbox]
                     outputs.append(output)
