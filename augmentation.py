@@ -32,10 +32,10 @@ class Augmentation:
         t_1 = time.time()
         self.logger.info(f"Configuration loaded in {(t_1 - t_0) * 1000:.2f} ms")
 
-    def run(
+    def __call__(
         self,
         images: Union[List[cv2.typing.MatLike], List[str]] = None,
-        bboxes: Union[List[Tuple[int]], List[str]] = None,
+        bboxes: Union[List[List[Tuple[int]]], List[str]] = None,
         augmentation_per_image: int = 1,
         resize: bool = True,
         context: bool = False,
@@ -68,31 +68,48 @@ class Augmentation:
             t_1 = time.time()
             self.logger.info(f"Images loaded in {(t_1 - t_0) * 1000:.2f} ms")
 
+        self.logger.info("Loading bboxes...")
+        t_0 = time.time()
+
         if all(isinstance(bbox, str) for bbox in bboxes):
-            self.logger.info("Loading bboxes...")
-            t_0 = time.time()
             bboxes = [
-                [float(i) for i in open(bbox, "r").readline().split(" ")]
+                [
+                    [float(i) for i in line.split(" ")]
+                    for line in open(bbox, "r").readlines()
+                ]
                 for bbox in bboxes
             ]
-            for i in range(len(bboxes)):
-                bboxes[i] = (
-                    int(bboxes[i][0] * images[i].shape[1]),
-                    int(bboxes[i][1] * images[i].shape[0]),
-                    int(bboxes[i][2] * images[i].shape[1]),
-                    int(bboxes[i][3] * images[i].shape[0]),
+
+        for i, bbox in enumerate(bboxes):
+            bboxes[i] = [
+                (
+                    int(b[0] * images[i].shape[1]),
+                    int(b[1] * images[i].shape[0]),
+                    int(b[2] * images[i].shape[1]),
+                    int(b[3] * images[i].shape[0]),
                 )
-            t_1 = time.time()
-            self.logger.info(f"Bboxes loaded in {(t_1 - t_0) * 1000:.2f} ms")
+                for b in bbox
+            ]
+
+        t_1 = time.time()
+        self.logger.info(f"Bboxes loaded in {(t_1 - t_0) * 1000:.2f} ms")
 
         if resize:
             self.logger.info("Resizing images...")
             t_0 = time.time()
             size = int(self.configuration["size"])
             for i in range(len(images)):
-                ratio = size / max(images[i].shape[:2])
+                x_ratio = size / images[i].shape[1]
+                y_ratio = size / images[i].shape[0]
                 images[i] = cv2.resize(images[i], (size, size))
-                bboxes[i] = [int(b * ratio) for b in bboxes[i]]
+                for j, b in enumerate(bboxes[i]):
+                    bboxes[i][j] = (
+                        int(b[0] * x_ratio),
+                        int(b[1] * y_ratio),
+                        int(b[2] * x_ratio),
+                        int(b[3] * y_ratio),
+                    )
+
             t_1 = time.time()
             self.logger.info(f"Images resized in {(t_1 - t_0) * 1000:.2f} ms")
 
@@ -129,21 +146,21 @@ class Augmentation:
                 for _ in range(augmentation_per_image):
                     self.image = images[i].copy()
                     self.shape = self.image.shape
-                    self.bbox = bboxes[i]
+                    self.bbox = bboxes[i].copy()
 
-                    self.__translate__()
-                    self.__rotate__()
-                    self.__scale__()
-                    self.__stretch__()
-                    self.__shear__()
+                    # self.__translate__()
+                    # self.__rotate__()
+                    # self.__scale__()
+                    # self.__stretch__()
+                    # self.__shear__()
 
-                    self.__vertical_flip__()
-                    self.__horizontal_flip__()
+                    # self.__vertical_flip__()
+                    # self.__horizontal_flip__()
 
-                    self.__monochrome__()
-                    self.__hsv__()
-                    self.__contrast__()
-                    self.__sharpness__()
+                    # self.__monochrome__()
+                    # self.__hsv__()
+                    # self.__contrast__()
+                    # self.__sharpness__()
 
                     output = [self.image, self.bbox]
                     outputs.append(output)
@@ -159,15 +176,18 @@ class Augmentation:
             for i, output in enumerate(outputs):
                 image = output[0]
                 bbox = output[1]
-                bbox = (
-                    bbox[0] / image.shape[1],
-                    bbox[1] / image.shape[0],
-                    bbox[2] / image.shape[1],
-                    bbox[3] / image.shape[0],
-                )
+                bbox = [
+                    (
+                        b[0] / image.shape[1],
+                        b[1] / image.shape[0],
+                        b[2] / image.shape[1],
+                        b[3] / image.shape[0],
+                    )
+                    for b in bbox
+                ]
                 cv2.imwrite(f"{save_path}/{save_name}_{i}.jpg", image)
                 with open(f"{save_path}/{save_name}_{i}.txt", "w") as file:
-                    file.write(" ".join(map(str, bbox)))
+                    file.writelines([" ".join(map(str, b)) + "\n" for b in bbox])
 
             t_1 = time.time()
             self.logger.info(f"Images saved in {(t_1 - t_0) * 1000:.2f} ms")
@@ -191,12 +211,13 @@ class Augmentation:
     def __show__(self):
         draw = self.image.copy()
         if self.bbox is not None:
-            draw = cv2.rectangle(
-                draw,
-                (self.bbox),
-                (0, 255, 0),
-                2,
-            )
+            for b in self.bbox:
+                draw = cv2.rectangle(
+                    draw,
+                    b,
+                    (0, 255, 0),
+                    2,
+                )
         cv2.imshow(self.name, draw)
 
     def __translate__(self):
@@ -214,12 +235,14 @@ class Augmentation:
 
             translation_matrix = np.float32([[1, 0, x], [0, 1, y]])
 
-            self.bbox = (
-                int(self.bbox[0] + x),
-                int(self.bbox[1] + y),
-                self.bbox[2],
-                self.bbox[3],
-            )
+            if self.bbox is not None:
+                for i, b in enumerate(self.bbox):
+                    self.bbox[i] = (
+                        int(b[0] + x),
+                        int(b[1] + y),
+                        b[2],
+                        b[3],
+                    )
 
             self.image = cv2.warpAffine(
                 self.image, translation_matrix, (self.shape[1], self.shape[0])
@@ -241,25 +264,27 @@ class Augmentation:
 
             rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
 
-            x, y, width, height = self.bbox
-            x_min = x
-            y_min = y
-            x_max = x + width
-            y_max = y + height
+            if self.bbox is not None:
+                for i, b in enumerate(self.bbox):
+                    x, y, w, h = b
+                    x_min = x
+                    y_min = y
+                    x_max = x + w
+                    y_max = y + h
 
-            points = np.array(
-                [[x_min, y_min], [x_max, y_min], [x_min, y_max], [x_max, y_max]]
-            ).reshape(4, 1, 2)
-            rotated_points = (
-                cv2.transform(points, rotation_matrix).reshape(4, 2).astype(int)
-            )
+                    points = np.array(
+                        [[x_min, y_min], [x_max, y_min], [x_min, y_max], [x_max, y_max]]
+                    ).reshape(4, 1, 2)
+                    rotated_points = (
+                        cv2.transform(points, rotation_matrix).reshape(4, 2).astype(int)
+                    )
 
-            x_min = int(np.min(rotated_points[:, 0]))
-            x_max = int(np.max(rotated_points[:, 0]))
-            y_min = int(np.min(rotated_points[:, 1]))
-            y_max = int(np.max(rotated_points[:, 1]))
+                    x_min = int(np.min(rotated_points[:, 0]))
+                    x_max = int(np.max(rotated_points[:, 0]))
+                    y_min = int(np.min(rotated_points[:, 1]))
+                    y_max = int(np.max(rotated_points[:, 1]))
 
-            self.bbox = (x_min, y_min, x_max - x_min, y_max - y_min)
+                    self.bbox[i] = (x_min, y_min, x_max - x_min, y_max - y_min)
 
             self.image = cv2.warpAffine(
                 self.image, rotation_matrix, (int(self.shape[1]), int(self.shape[0]))
@@ -281,19 +306,23 @@ class Augmentation:
 
             scale_matrix = cv2.getRotationMatrix2D(center, 0, scale)
 
-            points = np.array(
-                [
-                    [self.bbox[0], self.bbox[1]],
-                    [self.bbox[0] + self.bbox[2], self.bbox[1] + self.bbox[3]],
-                ]
-            ).reshape(2, 1, 2)
-            scaled_points = cv2.transform(points, scale_matrix).reshape(4).astype(int)
-            self.bbox = (
-                scaled_points[0],
-                scaled_points[1],
-                scaled_points[2] - scaled_points[0],
-                scaled_points[3] - scaled_points[1],
-            )
+            if self.bbox is not None:
+                for i, b in enumerate(self.bbox):
+                    points = np.array(
+                        [
+                            [b[0], b[1]],
+                            [b[0] + b[2], b[1] + b[3]],
+                        ]
+                    ).reshape(2, 1, 2)
+                    scaled_points = (
+                        cv2.transform(points, scale_matrix).reshape(4).astype(int)
+                    )
+                    self.bbox[i] = (
+                        scaled_points[0],
+                        scaled_points[1],
+                        scaled_points[2] - scaled_points[0],
+                        scaled_points[3] - scaled_points[1],
+                    )
 
             self.image = cv2.warpAffine(
                 self.image, scale_matrix, (int(self.shape[1]), int(self.shape[0]))
@@ -314,18 +343,20 @@ class Augmentation:
 
             stretch_matrix = np.float32([[x, 0, 0], [0, y, 0]])
 
-            stretched_points = (
-                int(self.bbox[0] * x),
-                int(self.bbox[1] * y),
-                int((self.bbox[0] + self.bbox[2]) * x),
-                int((self.bbox[1] + self.bbox[3]) * y),
-            )
-            self.bbox = (
-                stretched_points[0],
-                stretched_points[1],
-                stretched_points[2] - stretched_points[0],
-                stretched_points[3] - stretched_points[1],
-            )
+            if self.bbox is not None:
+                for i, b in enumerate(self.bbox):
+                    stretched_points = (
+                        int(b[0] * x),
+                        int(b[1] * y),
+                        int((b[0] + b[2]) * x),
+                        int((b[1] + b[3]) * y),
+                    )
+                    self.bbox[i] = (
+                        stretched_points[0],
+                        stretched_points[1],
+                        stretched_points[2] - stretched_points[0],
+                        stretched_points[3] - stretched_points[1],
+                    )
 
             stretched = cv2.warpAffine(
                 self.image, stretch_matrix, (self.shape[1], self.shape[0])
@@ -347,21 +378,23 @@ class Augmentation:
 
             shear_matrix = np.float32([[1, x, 0], [y, 1, 0]])
 
-            x_min, y_min, width, height = self.bbox
-            x_max = x_min + width
-            y_max = y_min + height
+            if self.bbox is not None:
+                for i, b in enumerate(self.bbox):
+                    x_min, y_min, w, h = b
+                    x_max = x_min + w
+                    y_max = y_min + h
 
-            points = np.array(
-                [[x_min, y_min], [x_max, y_min], [x_min, y_max], [x_max, y_max]]
-            ).reshape(4, 1, 2)
-            sheared_points = cv2.transform(points, shear_matrix).reshape(4, 2)
+                    points = np.array(
+                        [[x_min, y_min], [x_max, y_min], [x_min, y_max], [x_max, y_max]]
+                    ).reshape(4, 1, 2)
+                    sheared_points = cv2.transform(points, shear_matrix).reshape(4, 2)
 
-            x_min = int(np.min(sheared_points[:, 0]))
-            y_min = int(np.min(sheared_points[:, 1]))
-            x_max = int(np.max(sheared_points[:, 0]))
-            y_max = int(np.max(sheared_points[:, 1]))
+                    x_min = int(np.min(sheared_points[:, 0]))
+                    y_min = int(np.min(sheared_points[:, 1]))
+                    x_max = int(np.max(sheared_points[:, 0]))
+                    y_max = int(np.max(sheared_points[:, 1]))
 
-            self.bbox = (x_min, y_min, x_max - x_min, y_max - y_min)
+                    self.bbox[i] = (x_min, y_min, x_max - x_min, y_max - y_min)
 
             self.image = cv2.warpAffine(
                 self.image, shear_matrix, (int(self.shape[1]), int(self.shape[0]))
@@ -373,12 +406,14 @@ class Augmentation:
             self.logger.error("Vertical flip probability must be between 0 and 1")
             exit(1)
         if random() <= probability:
-            self.bbox = (
-                self.shape[1] - self.bbox[0] - self.bbox[2],
-                self.bbox[1],
-                self.bbox[2],
-                self.bbox[3],
-            )
+            if self.bbox is not None:
+                for i, b in enumerate(self.bbox):
+                    self.bbox[i] = (
+                        self.shape[1] - b[0] - b[2],
+                        b[1],
+                        b[2],
+                        b[3],
+                    )
 
             self.image = cv2.flip(self.image, 1)
 
@@ -388,12 +423,14 @@ class Augmentation:
             self.logger.error("Horizontal flip probability must be between 0 and 1")
             exit(1)
         if random() <= probability:
-            self.bbox = (
-                self.bbox[0],
-                self.shape[0] - self.bbox[1] - self.bbox[3],
-                self.bbox[2],
-                self.bbox[3],
-            )
+            if self.bbox is not None:
+                for i, b in enumerate(self.bbox):
+                    self.bbox[i] = (
+                        b[0],
+                        self.shape[0] - b[1] - b[3],
+                        b[2],
+                        b[3],
+                    )
 
             self.image = cv2.flip(self.image, 0)
 
@@ -489,22 +526,19 @@ class Augmentation:
 if __name__ == "__main__":
     augmentation = Augmentation("./augmentation_config.yaml")
 
-    images = ["./moon.jpg"]
-    bboxes = ["./moon.txt"]
+    images = glob("./moons*.jpg")
+    bboxes = glob("./moons*.txt")
     backgrounds = glob("./backgrounds/*.jpg")
 
-    augmentation.run(
-        images=images, 
-        bboxes=bboxes, 
-        augmentation_per_image=100, 
-        show=True
+    augmentation(
+        images=images, bboxes=bboxes, augmentation_per_image=10, show=True, save=True
     )
 
-    augmentation.run(
+    augmentation(
         context=True,
         images=images,
         bboxes=bboxes,
-        augmentation_per_image=100,
+        augmentation_per_image=10,
         backgrounds=backgrounds,
         images_background_color=(0, 0, 0),
         show=True,
