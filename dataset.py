@@ -2,7 +2,12 @@ from torch.utils.data import Dataset
 from augmentation import Augmentation
 from random import shuffle
 from glob import glob
-from cv2 import imread, cvtColor, COLOR_BGR2RGB, resize, rectangle, waitKey, imshow
+from cv2 import (
+    imread,
+    imshow,
+    waitKey,
+)
+from utils import load_configuration, init_logger, draw_annotation
 
 
 class Dataset(Dataset):
@@ -16,7 +21,7 @@ class Dataset(Dataset):
             self.y = glob(configuration["train_path"] + "/*.txt")
         self.augment = augment
         if self.augment:
-            self.augmentation = Augmentation(configuration, log_level=None)
+            self.augmentation = Augmentation(configuration)
         if shuffle_order:
             indexes = list(range(len(self.x)))
             shuffle(indexes)
@@ -31,17 +36,13 @@ class Dataset(Dataset):
         y = self.y[index]
 
         x = imread(x)
-        x = cvtColor(x, COLOR_BGR2RGB)
-
-        size = int(self.configuration["input_size"])
-        x = resize(x, (size, size))
         y = [
             tuple(float(i) for i in line.split(" "))
             for line in open(y, "r").readlines()
         ]
 
         if self.augment:
-            x, y = self.augmentation([x], [y], resize=False)
+            x, y = self.augmentation([x], [y])
             x = x[0]
             y = y[0]
 
@@ -49,24 +50,9 @@ class Dataset(Dataset):
 
 
 if __name__ == "__main__":
-    from yaml import safe_load
-
-    configuration = safe_load(open("config.yaml", "r"))
-    dataset = Dataset(configuration, augment=False, shuffle_order=False)
+    configuration = load_configuration("config.yaml")
+    dataset = Dataset(configuration, augment=True)
     x, y = dataset[0]
-    shape = x.shape
-    for i in range(len(y)):
-        bbox = y[i]
-
-        bbox = (
-            bbox[0],
-            int(bbox[1] * shape[1]),
-            int(bbox[2] * shape[0]),
-            int(bbox[3] * shape[1]),
-            int(bbox[4] * shape[0]),
-        )
-
-        x = rectangle(x, bbox[1:], (0, 255, 0), 2)
-
-    imshow(str(y), x)
+    x = draw_annotation(x, y, configuration["classes"])
+    imshow("image", x)
     waitKey(0)
