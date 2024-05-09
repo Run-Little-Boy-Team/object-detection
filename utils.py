@@ -16,6 +16,10 @@ def init_logger(
     name: str = "System", log_level: str | None = "INFO", save: bool = True
 ) -> Logger:
     logger = getLogger(name)
+    for handler in logger.handlers:
+        handler.close()
+    logger.handlers.clear()
+
     if log_level is None or log_level.upper() == "NONE":
         logger.propagate = False
     else:

@@ -21,7 +21,10 @@ class Dataset(Dataset):
             self.y = glob(configuration["train_path"] + "/*.txt")
         self.augment = augment
         if self.augment:
-            self.augmentation = Augmentation(configuration)
+            self.augmentation = Augmentation(
+                configuration,
+                name="Train augmentation" if not test else "Test augmentation",
+            )
         if shuffle_order:
             indexes = list(range(len(self.x)))
             shuffle(indexes)
