@@ -1,4 +1,4 @@
-log_level: INFO
+log_level: none
 
 input_size: 320
 train_path: ./dataset/train
@@ -10,8 +10,7 @@ milestones:
   - 100
   - 200
   - 250
-
-num_workers: 4
+num_workers: 24
   
 classes:
 - person

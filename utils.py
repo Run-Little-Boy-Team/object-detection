@@ -69,16 +69,3 @@ def draw_annotation(
             1,
         )
     return draw
-
-
-def preprocess(images: cv2.typing.MatLike, input_size: int) -> cv2.typing.MatLike:
-    processed_images = []
-    for image in images:
-        processed_image = image.copy()
-        processed_image = cv2.resize(processed_image, (input_size, input_size))
-        processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
-        processed_image = preprocess.astype("float32")
-        processed_image /= 255.0
-        processed_image = processed_image.transpose((2, 0, 1))
-        processed_images.append(processed_image)
-    return processed_images
