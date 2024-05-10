@@ -89,8 +89,10 @@ class DetectorLoss(nn.Module):
         
     def forward(self, preds, targets):
         # 初始化loss值
-        ft = torch.cuda.FloatTensor if preds[0].is_cuda else torch.Tensor
-        cls_loss, iou_loss, obj_loss = ft([0]), ft([0]), ft([0])
+        # ft = torch.cuda.FloatTensor if preds[0].is_cuda else torch.Tensor
+        # cls_loss, iou_loss, obj_loss = ft([0]), ft([0]), ft([0])
+        device = torch.device("cuda" if preds[0].is_cuda else "cpu")
+        cls_loss, iou_loss, obj_loss = torch.tensor([0], dtype=torch.float32, device=device), torch.tensor([0], dtype=torch.float32, device=device), torch.tensor([0], dtype=torch.float32, device=device)
 
         # 定义obj和cls的损失函数
         BCEcls = nn.NLLLoss() 
