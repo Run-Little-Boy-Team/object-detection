@@ -98,9 +98,8 @@ classes:
 - obstacle
 
 augmentation:
-  augmentation_per_image: 1
   backgrounds_path: ./backgrounds
-  backgrounds_color: 0;0;0
+  backgrounds_color: 0;255;1
 
   translation_probability: 0.5
   translation_amplitude: 0.1

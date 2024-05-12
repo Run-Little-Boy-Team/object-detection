@@ -42,7 +42,7 @@ class Augmentation:
         save: bool = False,
         save_path: str = "./outputs",
         save_name: str = "augmented",
-    ) -> list[tuple[cv2.typing.MatLike, tuple[int]]]:
+    ) -> list[tuple[cv2.typing.MatLike, tuple[int]]] | None:
         start = time.time()
 
         if images is None:
@@ -53,12 +53,6 @@ class Augmentation:
             exit(1)
         if len(images) != len(bboxes):
             self.logger.error("Number of images and bboxes must be the same")
-            exit(1)
-        augmentation_per_image = self.configuration["augmentation"][
-            "augmentation_per_image"
-        ]
-        if augmentation_per_image < 1:
-            self.logger.error("Augmentation per image must be greater than 0")
             exit(1)
 
         if all(isinstance(image, str) for image in images):
@@ -115,8 +109,6 @@ class Augmentation:
             t_1 = time.time()
             self.logger.info(f"Images resized in {(t_1 - t_0) * 1000:.2f} ms")
 
-        images_outputs = []
-        bboxes_outputs = []
         if context:
             backgrounds_path = self.configuration["augmentation"]["backgrounds_path"]
             backgrounds_color = [
@@ -134,100 +126,112 @@ class Augmentation:
                 exit(1)
 
             self.logger.info(
-                f"Running in context mode for {len(images)} image{'s'if len(images) > 1 else ''} and {augmentation_per_image} augmentation{'s'if augmentation_per_image > 1 else ''} per image..."
+                f"Running in context mode for {len(images)} image{'s'if len(images) > 1 else ''}..."
             )
 
+            backgrounds = [cv2.imread(background) for background in backgrounds]
             for i in range(len(images)):
-                image = images[i]
-                bbox = bboxes[i]
+                image = images[i].copy()
+                bbox = bboxes[i].copy()
+                bbox = [
+                    (
+                        b[0],
+                        b[1] / image.shape[1],
+                        b[2] / image.shape[0],
+                        b[3] / image.shape[1],
+                        b[4] / image.shape[0],
+                    )
+                    for b in bbox
+                ]
                 mask = np.all(image == backgrounds_color[::-1], axis=-1)
-                for _ in range(augmentation_per_image):
-                    index = random.randint(0, len(backgrounds) - 1)
-                    background = backgrounds[index]
-                    if isinstance(background, str):
-                        background = cv2.imread(background)
+                for j, background in enumerate(backgrounds):
                     background = cv2.resize(background, (image.shape[:2][::-1]))
                     image[mask] = background[mask]
-                    images_outputs.append(image.copy())
-                    bboxes_outputs.append(bbox)
-
+                    if save:
+                        os.makedirs(save_path, exist_ok=True)
+                        filename = f"{save_path}/{save_name}_{i}_{j}"
+                        cv2.imwrite(f"{filename}.jpg", image)
+                        with open(f"{filename}.txt", "w") as file:
+                            file.writelines(
+                                [" ".join(map(str, b)) + "\n" for b in bbox]
+                            )
+                    if show:
+                        draw = utils.draw_annotation(
+                            image, bbox, self.configuration["classes"]
+                        )
+                        cv2.imshow(f"{self.name} - Press ESC to exit", draw)
+                        key = cv2.waitKey(0)
+                        if key == 27:
+                            cv2.destroyAllWindows()
+                            exit(0)
+                    self.logger.info(f"Image {i}/{len(images)} augmented")
+            cv2.destroyAllWindows()
+            end = time.time()
+            self.logger.info(f"Finished in {(end - start) * 1000:.2f} ms")
+            return None
         else:
             self.logger.info(
-                f"Running for {len(images)} image{'s'if len(images) > 1 else ''} and {augmentation_per_image} augmentation{'s'if augmentation_per_image > 1 else ''} per image..."
+                f"Running for {len(images)} image{'s'if len(images) > 1 else ''}..."
             )
+
+            images_outputs = []
+            bboxes_outputs = []
 
             for i in range(len(images)):
-                for _ in range(augmentation_per_image):
-                    self.image = images[i].copy()
-                    self.shape = self.image.shape
-                    self.bbox = bboxes[i].copy()
+                self.image = images[i].copy()
+                self.shape = self.image.shape
+                self.bbox = bboxes[i].copy()
 
-                    self.__translate__()
-                    self.__rotate__()
-                    self.__scale__()
-                    self.__stretch__()
-                    self.__shear__()
+                self.__translate__()
+                self.__rotate__()
+                self.__scale__()
+                self.__stretch__()
+                self.__shear__()
 
-                    self.__vertical_flip__()
-                    self.__horizontal_flip__()
+                self.__vertical_flip__()
+                self.__horizontal_flip__()
 
-                    self.__monochrome__()
-                    self.__hsv__()
-                    self.__contrast__()
-                    self.__sharpness__()
+                self.__monochrome__()
+                self.__hsv__()
+                self.__contrast__()
+                self.__sharpness__()
 
-                    images_outputs.append(self.image)
-                    bboxes_outputs.append(self.bbox)
+                self.bbox = [
+                    (
+                        b[0],
+                        b[1] / self.image.shape[1],
+                        b[2] / self.image.shape[0],
+                        b[3] / self.image.shape[1],
+                        b[4] / self.image.shape[0],
+                    )
+                    for b in self.bbox
+                ]
 
-        end = time.time()
-        self.logger.info(f"Finished in {(end - start) * 1000:.2f} ms")
+                images_outputs.append(self.image)
+                bboxes_outputs.append(self.bbox)
 
-        for i, bboxes in enumerate(bboxes_outputs):
-            image = images_outputs[i]
-            bboxes_outputs[i] = [
-                (
-                    b[0],
-                    b[1] / image.shape[1],
-                    b[2] / image.shape[0],
-                    b[3] / image.shape[1],
-                    b[4] / image.shape[0],
-                )
-                for b in bboxes
-            ]
-
-        if save:
-            self.logger.info("Saving images...")
-            t_0 = time.time()
-
-            os.makedirs(save_path, exist_ok=True)
-            for i in range(len(images_outputs)):
-                image = images_outputs[i]
-                bbox = bboxes_outputs[i]
-                cv2.imwrite(f"{save_path}/{save_name}_{i}.jpg", image)
-                with open(f"{save_path}/{save_name}_{i}.txt", "w") as file:
-                    file.writelines([" ".join(map(str, b)) + "\n" for b in bbox])
-
-            t_1 = time.time()
-            self.logger.info(f"Images saved in {(t_1 - t_0) * 1000:.2f} ms")
-
-        if show:
-            self.logger.info(
-                "Showing augmented images, press any key to continue or ESC to exit..."
-            )
-            for i in range(len(images_outputs)):
-                self.logger.info(f"{i+1}/{len(images_outputs)}")
-                self.image = images_outputs[i]
-                self.bbox = bboxes_outputs[i]
-                draw = utils.draw_annotation(
-                    self.image, self.bbox, self.configuration["classes"]
-                )
-                cv2.imshow(self.name, draw)
-                key = cv2.waitKey(0)
-                if key == 27:
-                    break
+                if save:
+                    os.makedirs(save_path, exist_ok=True)
+                    filename = f"{save_path}/{save_name}_{i}_{j}"
+                    cv2.imwrite(f"{filename}.jpg", self.image)
+                    with open(f"{filename}.txt", "w") as file:
+                        file.writelines(
+                            [" ".join(map(str, b)) + "\n" for b in self.bbox]
+                        )
+                if show:
+                    draw = utils.draw_annotation(
+                        self.image, self.bbox, self.configuration["classes"]
+                    )
+                    cv2.imshow(f"{self.name} - Press ESC to exit", draw)
+                    key = cv2.waitKey(0)
+                    if key == 27:
+                        cv2.destroyAllWindows()
+                        exit(0)
+                self.logger.info(f"Image {i}/{len(images)} augmented")
             cv2.destroyAllWindows()
-
-        return images_outputs, bboxes_outputs
+            end = time.time()
+            self.logger.info(f"Finished in {(end - start) * 1000:.2f} ms")
+            return images_outputs, bboxes_outputs
 
     def __translate__(self):
         probability = float(
