@@ -4,5 +4,5 @@
 *.png
 *.txt
 *.log
-
+checkpoints
 !moons*

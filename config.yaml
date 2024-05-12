@@ -3,8 +3,8 @@ log_level: none
 input_size: 320
 train_path: ./dataset/train
 test_path: ./dataset/test
-epochs: 300
-batch_size: 96
+epochs: 30
+batch_size: 128
 learning_rate: 0.001
 milestones:
   - 100
