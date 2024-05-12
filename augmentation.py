@@ -37,11 +37,13 @@ class Augmentation:
         images: list[cv2.typing.MatLike] | list[str] | cv2.typing.MatLike | str = None,
         bboxes: list[list[tuple[int]]] | list[str] | list[tuple[int]] | str = None,
         resize_image: bool = False,
-        context: bool = False,
         show: bool = False,
         save: bool = False,
         save_path: str = "./outputs",
         save_name: str = "augmented",
+        context: bool = False,
+        backgrounds_path: str | None = None,
+        backgrounds_color: tuple[int] | None = None,
     ) -> list[tuple[cv2.typing.MatLike, tuple[int]]] | None:
         start = time.time()
 
@@ -110,19 +112,18 @@ class Augmentation:
             self.logger.info(f"Images resized in {(t_1 - t_0) * 1000:.2f} ms")
 
         if context:
-            backgrounds_path = self.configuration["augmentation"]["backgrounds_path"]
-            backgrounds_color = [
-                int(i)
-                for i in self.configuration["augmentation"]["backgrounds_color"].split(
-                    ";"
-                )
-            ]
+            if backgrounds_path is None:
+                self.logger.error("Backgrounds path must be provided")
+                exit(1)
+            if backgrounds_color is None:
+                self.logger.error("Backgrounds color must be provided")
+                exit(1)
             formats = ["jpg", "jpeg", "png"]
             backgrounds = []
             for format in formats:
                 backgrounds.extend(glob.glob(f"{backgrounds_path}/*.{format}"))
             if len(backgrounds) == 0:
-                self.logger.error("Backgrounds must be provided")
+                self.logger.error("No backgrounds found in the specified path")
                 exit(1)
 
             self.logger.info(
@@ -566,11 +567,15 @@ if __name__ == "__main__":
 
     images = glob.glob("./moons*.jpg")
     bboxes = glob.glob("./moons*.txt")
+    images.sort()
+    bboxes.sort()
 
     augmentation(images=images, bboxes=bboxes, show=True)
 
     augmentation(
         context=True,
+        backgrounds_path="./backgrounds",
+        backgrounds_color=(0, 0, 0),
         images=images,
         bboxes=bboxes,
         show=True,

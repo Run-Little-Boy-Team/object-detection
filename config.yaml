@@ -98,9 +98,6 @@ classes:
 - obstacle
 
 augmentation:
-  backgrounds_path: ./backgrounds
-  backgrounds_color: 0;255;1
-
   translation_probability: 0.5
   translation_amplitude: 0.1
   rotation_probability: 0.5
