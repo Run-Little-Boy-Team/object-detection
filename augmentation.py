@@ -165,7 +165,7 @@ class Augmentation:
                         if key == 27:
                             cv2.destroyAllWindows()
                             exit(0)
-                    self.logger.info(f"Image {i}/{len(images)} augmented")
+                    self.logger.info(f"Image {i}/{len(images)} augmented with background {j}/{len(backgrounds)}")
             cv2.destroyAllWindows()
             end = time.time()
             self.logger.info(f"Finished in {(end - start) * 1000:.2f} ms")
