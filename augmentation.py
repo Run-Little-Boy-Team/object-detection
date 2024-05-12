@@ -112,6 +112,8 @@ class Augmentation:
             self.logger.info(f"Images resized in {(t_1 - t_0) * 1000:.2f} ms")
 
         if context:
+            import multiprocessing
+
             if backgrounds_path is None:
                 self.logger.error("Backgrounds path must be provided")
                 exit(1)
@@ -131,41 +133,29 @@ class Augmentation:
             )
 
             backgrounds = [cv2.imread(background) for background in backgrounds]
+            processes = []
             for i in range(len(images)):
                 image = images[i].copy()
                 bbox = bboxes[i].copy()
-                bbox = [
-                    (
-                        b[0],
-                        b[1] / image.shape[1],
-                        b[2] / image.shape[0],
-                        b[3] / image.shape[1],
-                        b[4] / image.shape[0],
-                    )
-                    for b in bbox
-                ]
-                mask = np.all(image == backgrounds_color[::-1], axis=-1)
-                for j, background in enumerate(backgrounds):
-                    background = cv2.resize(background, (image.shape[:2][::-1]))
-                    image[mask] = background[mask]
-                    if save:
-                        os.makedirs(save_path, exist_ok=True)
-                        filename = f"{save_path}/{save_name}_{i}_{j}"
-                        cv2.imwrite(f"{filename}.jpg", image)
-                        with open(f"{filename}.txt", "w") as file:
-                            file.writelines(
-                                [" ".join(map(str, b)) + "\n" for b in bbox]
-                            )
-                    if show:
-                        draw = utils.draw_annotation(
-                            image, bbox, self.configuration["classes"]
-                        )
-                        cv2.imshow(f"{self.name} - Press ESC to exit", draw)
-                        key = cv2.waitKey(0)
-                        if key == 27:
-                            cv2.destroyAllWindows()
-                            exit(0)
-                    self.logger.info(f"Image {i}/{len(images)} augmented with background {j}/{len(backgrounds)}")
+                process = multiprocessing.Process(
+                    target=self.context_process,
+                    args=(
+                        i,
+                        image,
+                        bbox,
+                        backgrounds,
+                        backgrounds_color,
+                        save,
+                        save_path,
+                        save_name,
+                        show,
+                    ),
+                )
+                processes.append(process)
+                process.start()
+            for process in processes:
+                process.join()
+
             cv2.destroyAllWindows()
             end = time.time()
             self.logger.info(f"Finished in {(end - start) * 1000:.2f} ms")
@@ -233,6 +223,49 @@ class Augmentation:
             end = time.time()
             self.logger.info(f"Finished in {(end - start) * 1000:.2f} ms")
             return images_outputs, bboxes_outputs
+
+    def context_process(
+        self,
+        i,
+        image,
+        bbox,
+        backgrounds,
+        backgrounds_color,
+        save,
+        save_path,
+        save_name,
+        show,
+    ):
+        bbox = [
+            (
+                b[0],
+                b[1] / image.shape[1],
+                b[2] / image.shape[0],
+                b[3] / image.shape[1],
+                b[4] / image.shape[0],
+            )
+            for b in bbox
+        ]
+        mask = np.all(image == backgrounds_color[::-1], axis=-1)
+        for j, background in enumerate(backgrounds):
+            background = cv2.resize(background, (image.shape[:2][::-1]))
+            image[mask] = background[mask]
+            if save:
+                os.makedirs(save_path, exist_ok=True)
+                filename = f"{save_path}/{save_name}_{i}_{j}"
+                cv2.imwrite(f"{filename}.jpg", image)
+                with open(f"{filename}.txt", "w") as file:
+                    file.writelines([" ".join(map(str, b)) + "\n" for b in bbox])
+            if show:
+                draw = utils.draw_annotation(image, bbox, self.configuration["classes"])
+                cv2.imshow(f"{self.name} - Press ESC to exit", draw)
+                key = cv2.waitKey(0)
+                if key == 27:
+                    cv2.destroyAllWindows()
+                    exit(0)
+            self.logger.info(
+                f"Image {i}/{len(images)} augmented with background {j}/{len(backgrounds)}"
+            )
 
     def __translate__(self):
         probability = float(
@@ -575,8 +608,9 @@ if __name__ == "__main__":
     augmentation(
         context=True,
         backgrounds_path="./backgrounds",
-        backgrounds_color=(0, 0, 0),
+        backgrounds_color=(0, 255, 1),
         images=images,
         bboxes=bboxes,
-        show=True,
+        save=True,
+        save_name="Augmented",
     )
