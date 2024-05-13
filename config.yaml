@@ -10,7 +10,7 @@ milestones:
   - 100
   - 200
   - 250
-num_workers: 24
+num_workers: 12
   
 classes:
 - person

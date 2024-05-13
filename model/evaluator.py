@@ -118,7 +118,7 @@ def handle_preds(preds, device, conf_thresh=0.25, nms_thresh=0.45):
     bboxes[..., 5] = pcls.argmax(dim=-1)
 
     # 检测框的坐标
-    gy, gx = torch.meshgrid([torch.arange(H), torch.arange(W)], indexing="xy")
+    gy, gx = torch.meshgrid([torch.arange(H), torch.arange(W)], indexing="ij")
     bw, bh = preg[..., 2].sigmoid(), preg[..., 3].sigmoid() 
     bcx = (preg[..., 0].tanh() + gx.to(device)) / W
     bcy = (preg[..., 1].tanh() + gy.to(device)) / H
