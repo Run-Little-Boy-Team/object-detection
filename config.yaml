@@ -3,7 +3,7 @@ log_level: none
 input_size: 320
 train_path: ./dataset/train
 test_path: ./dataset/test
-epochs: 30
+epochs: 300
 batch_size: 128
 learning_rate: 0.001
 milestones:
@@ -110,7 +110,7 @@ augmentation:
   shearing_amplitude: 0.1
   vertical_flip_probability: 0.5
   horizontal_flip_probability: 0.5
-  monochrome_probability: 0.5
+  monochrome_probability: 0.1
   hue_probability: 0.5
   hue_amplitude: 0.01
   saturation_probability: 0.5

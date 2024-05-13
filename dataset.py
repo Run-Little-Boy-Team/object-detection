@@ -14,6 +14,8 @@ class Dataset(Dataset):
         else:
             self.x = glob.glob(configuration["train_path"] + "/*.jpg")
             self.y = glob.glob(configuration["train_path"] + "/*.txt")
+        self.x.sort()
+        self.y.sort()
         self.augment = augment
         if self.augment:
             self.augmentation = Augmentation(configuration)
@@ -24,6 +26,9 @@ class Dataset(Dataset):
     def __getitem__(self, index):
         x = self.x[index]
         y = self.y[index]
+
+        if x.split(".")[0] != y.split(".")[0]:
+            raise Exception("Image and annotation file mismatch: ", x, y)
 
         x = cv2.imread(x)
         y = [
