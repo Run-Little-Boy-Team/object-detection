@@ -14,7 +14,7 @@ class Dataset(Dataset):
             self.x = glob.glob(configuration["test_path"] + "/*.jpg")
         else:
             self.x = glob.glob(configuration["train_path"] + "/*.jpg")
-        self.y = [f"{file.split('.')[0]}.txt" for file in self.x]
+        self.y = [f"{os.path.splitext(file)[0]}.txt" for file in self.x]
         self.x.sort()
         self.y.sort()
         self.augment = augment
