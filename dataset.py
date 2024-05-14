@@ -4,16 +4,17 @@ import glob
 import cv2
 import numpy as np
 import torch
+import os
+
 
 class Dataset(Dataset):
     def __init__(self, configuration, test=False, augment=False):
         self.configuration = configuration
         if test:
             self.x = glob.glob(configuration["test_path"] + "/*.jpg")
-            self.y = glob.glob(configuration["test_path"] + "/*.txt")
         else:
             self.x = glob.glob(configuration["train_path"] + "/*.jpg")
-            self.y = glob.glob(configuration["train_path"] + "/*.txt")
+        self.y = [f"{file.split('.')[0]}.txt" for file in self.x]
         self.x.sort()
         self.y.sort()
         self.augment = augment
@@ -27,14 +28,14 @@ class Dataset(Dataset):
         x = self.x[index]
         y = self.y[index]
 
-        if x.split(".")[0] != y.split(".")[0]:
-            raise Exception("Image and annotation file mismatch: ", x, y)
-
         x = cv2.imread(x)
-        y = [
-            tuple(float(i) for i in line.split(" "))
-            for line in open(y, "r").readlines()
-        ]
+        if os.path.exists(y):
+            y = [
+                tuple(float(i) for i in line.split(" "))
+                for line in open(y, "r").readlines()
+            ]
+        else:
+            y = []
 
         if self.augment:
             x, y = self.augmentation([x], [y])
