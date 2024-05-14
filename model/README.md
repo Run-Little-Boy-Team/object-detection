@@ -1,1 +1,0 @@
-Model from [https://github.com/dog-qiuqiu/FastestDet](https://github.com/dog-qiuqiu/FastestDet/tree/main/module)
