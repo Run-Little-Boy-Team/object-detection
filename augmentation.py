@@ -256,13 +256,13 @@ class Augmentation:
                 cv2.imwrite(f"{filename}.jpg", image)
                 with open(f"{filename}.txt", "w") as file:
                     file.writelines([" ".join(map(str, b)) + "\n" for b in bbox])
-            if show:
-                draw = utils.draw_annotation(image, bbox, self.configuration["classes"])
-                cv2.imshow(f"{self.name} - Press ESC to exit", draw)
-                key = cv2.waitKey(0)
-                if key == 27:
-                    cv2.destroyAllWindows()
-                    exit(0)
+            # if show:
+            #     draw = utils.draw_annotation(image, bbox, self.configuration["classes"])
+            #     cv2.imshow(f"{self.name} - Press ESC to exit", draw)
+            #     key = cv2.waitKey(0)
+            #     if key == 27:
+            #         cv2.destroyAllWindows()
+            #         exit(0)
             self.logger.info(
                 f"Image {i}/{len(images)} augmented with background {j}/{len(backgrounds)}"
             )
@@ -598,8 +598,8 @@ if __name__ == "__main__":
     configuration = utils.load_configuration("config.yaml")
     augmentation = Augmentation(configuration)
 
-    images = glob.glob("./moons*.jpg")
-    bboxes = glob.glob("./moons*.txt")
+    images = glob.glob("./sample/*.jpg")
+    bboxes = glob.glob("./sample/*.txt")
     images.sort()
     bboxes.sort()
 
@@ -607,8 +607,8 @@ if __name__ == "__main__":
 
     augmentation(
         context=True,
-        backgrounds_path="./backgrounds",
-        backgrounds_color=(0, 255, 1),
+        backgrounds_path="./sample/backgrounds",
+        backgrounds_color=(0, 0, 0),
         images=images,
         bboxes=bboxes,
         save=True,
