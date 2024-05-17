@@ -1,8 +1,5 @@
 *.pyc
-*.jpg
-*.jpeg
-*.png
-*.txt
-*.log
+dataset
+logs
 checkpoints
 !moons*

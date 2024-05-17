@@ -13,7 +13,7 @@ def init_logger(
         handler.close()
     logger.handlers.clear()
 
-    if log_level is None or log_level.upper() == "NONE":
+    if log_level is None:
         logger.propagate = False
     else:
         logger.setLevel("DEBUG" if log_level is None else log_level.upper())

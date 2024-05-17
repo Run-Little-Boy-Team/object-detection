@@ -1,5 +1,6 @@
-log_level: none
+log_level: 
 
+checkpoint: 
 input_size: 320
 train_path: ./dataset/train
 test_path: ./dataset/test
@@ -10,7 +11,7 @@ milestones:
   - 100
   - 200
   - 250
-num_workers: 12
+num_workers: 8
   
 classes:
 - person
