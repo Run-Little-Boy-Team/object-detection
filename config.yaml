@@ -7,10 +7,14 @@ test_path: ./dataset/test
 epochs: 300
 batch_size: 128
 learning_rate: 0.001
+# milestones:
+#   - 100
+#   - 200
+#   - 250
 milestones:
+  - 50
   - 100
-  - 200
-  - 250
+  - 150
 num_workers: 8
   
 classes:
@@ -99,26 +103,26 @@ classes:
 - obstacle
 
 augmentation:
-  translation_probability: 0.5
+  translation_probability: 0.25
   translation_amplitude: 0.1
-  rotation_probability: 0.5
+  rotation_probability: 0.25
   rotation_amplitude: 45
-  scaling_probability: 0.5
+  scaling_probability: 0.25
   scaling_amplitude: 0.1
-  stretching_probability: 0.5
+  stretching_probability: 0.25
   stretching_amplitude: 0.1
-  shearing_probability: 0.5
+  shearing_probability: 0.25
   shearing_amplitude: 0.1
-  vertical_flip_probability: 0.5
-  horizontal_flip_probability: 0.5
+  vertical_flip_probability: 0.25
+  horizontal_flip_probability: 0.25
   monochrome_probability: 0.1
-  hue_probability: 0.5
-  hue_amplitude: 0.01
-  saturation_probability: 0.5
+  hue_probability: 0.25
+  hue_amplitude: 0.1
+  saturation_probability: 0.25
   saturation_amplitude: 0.1
-  brightness_probability: 0.5
+  brightness_probability: 0.25
   brightness_amplitude: 0.1
-  contrast_probability: 0.5
+  contrast_probability: 0.25
   contrast_amplitude: 0.1
-  sharpness_probability: 0.5
+  sharpness_probability: 0.25
   sharpness_amplitude: 0.1

@@ -72,7 +72,10 @@ class SPP(nn.Module):
         y3 = self.S3(x)
 
         y = torch.cat((y1, y2, y3), dim=1)
+        # y = torch.nn.quantized.FloatFunctional().cat((y1, y2, y3), dim=1)
         y = self.relu(x + self.output(y))
+        # y = torch.nn.quantized.FloatFunctional().add(x, self.output(y))
+        # y = self.relu(y)
 
         return y
 
@@ -96,3 +99,4 @@ class DetectHead(nn.Module):
         cls = self.softmax(self.cls_layers(x))
 
         return torch.cat((obj, reg, cls), dim =1)
+        # return torch.nn.quantized.FloatFunctional().cat((obj, reg, cls), dim =1)

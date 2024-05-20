@@ -48,7 +48,7 @@ class Dataset(Dataset):
 
         x = self.preprocess(x)
         y = [(0,) + i for i in y]
-        y = np.array(y)
+        y = np.array(y, dtype=np.float32)
 
         x = torch.from_numpy(x)
         y = torch.from_numpy(y)

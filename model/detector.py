@@ -8,6 +8,8 @@ class Detector(nn.Module):
     def __init__(self, category_num, load_param):
         super(Detector, self).__init__()
 
+        # self.quant = torch.ao.quantization.QuantStub()
+
         self.stage_repeats = [4, 8, 4]
         self.stage_out_channels = [-1, 24, 48, 96, 192]
         self.backbone = ShuffleNetV2(self.stage_repeats, self.stage_out_channels, load_param)
@@ -18,15 +20,21 @@ class Detector(nn.Module):
          
         self.detect_head = DetectHead(self.stage_out_channels[-2], category_num)
 
+        # self.dequant = torch.ao.quantization.DeQuantStub()
+
     def forward(self, x):
+        # x = self.quant(x)
         P1, P2, P3 = self.backbone(x)
         P3 = self.upsample(P3)
         P1 = self.avg_pool(P1)
         P = torch.cat((P1, P2, P3), dim=1)
+        # P = torch.nn.quantized.FloatFunctional().cat((P1, P2, P3), dim=1)
 
         y = self.SPP(P)
+        y = self.detect_head(y)
+        # y = self.dequant(y)
 
-        return self.detect_head(y)
+        return y
 
 if __name__ == "__main__":
     model = Detector(80, False)
