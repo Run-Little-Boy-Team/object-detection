@@ -8,6 +8,8 @@ class Detector(nn.Module):
     def __init__(self, category_num, load_param):
         super(Detector, self).__init__()
 
+        self.category_num = category_num
+
         # self.quant = torch.ao.quantization.QuantStub()
 
         self.stage_repeats = [4, 8, 4]
@@ -35,6 +37,29 @@ class Detector(nn.Module):
         # y = self.dequant(y)
 
         return y
+    
+    def reshape_category_num(self, category_num):
+        if category_num <= self.category_num:
+            i = category_num
+        else:
+            i = self.category_num
+        new_conv2d = torch.nn.Conv2d(self.stage_out_channels[-2], category_num, 1, stride=1, padding=0, bias=False)    
+        new_conv2d.weight.data[:i, :, :, :] = self.detect_head.cls_layers.conv5x5[3].weight.data[:i, :, :, :]
+        new_bn2d = torch.nn.BatchNorm2d(category_num)
+        new_bn2d.weight.data[:i] = self.detect_head.cls_layers.conv5x5[4].weight.data[:i]
+        new_bn2d.bias.data[:i] = self.detect_head.cls_layers.conv5x5[4].bias.data[:i]
+        new_bn2d.running_mean.data[:i] = self.detect_head.cls_layers.conv5x5[4].running_mean.data[:i]
+        new_bn2d.running_var.data[:i] = self.detect_head.cls_layers.conv5x5[4].running_var.data[:i]
+        new_conv5x5 = torch.nn.Sequential(
+            self.detect_head.cls_layers.conv5x5[0],
+            self.detect_head.cls_layers.conv5x5[1],
+            self.detect_head.cls_layers.conv5x5[2],
+            new_conv2d,
+            new_bn2d
+        )
+        device = next(self.parameters()).device
+        self.detect_head.cls_layers.conv5x5 = new_conv5x5.to(device)
+        self.category_num = category_num
 
 if __name__ == "__main__":
     model = Detector(80, False)

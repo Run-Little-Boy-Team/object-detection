@@ -1,5 +1,6 @@
 log_level: 
 
+pretrained: # ./weights/weight_AP05_0.253207_280-epoch.pth
 checkpoint: 
 input_size: 352
 train_path: ./dataset/RLB_dataset/train
