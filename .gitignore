@@ -1,5 +1,11 @@
+.vscode
 *.pyc
 dataset
 logs
 checkpoints
+run/c++/build
+run/c++/main
+run/c++/parse
+run/c++/read
+run/c++/sandbox
 !moons*

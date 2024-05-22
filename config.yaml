@@ -13,6 +13,9 @@ milestones:
   - 250
 num_workers: 8
 
+iou_threshold: 0.5
+confidence_threshold: 0.5
+
 class_id_offset: -80
 classes:
 - robot
