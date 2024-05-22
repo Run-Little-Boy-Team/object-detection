@@ -47,7 +47,7 @@ class Dataset(Dataset):
             y = y[0]
 
         x = self.preprocess(x)
-        y = [(0,) + i for i in y]
+        y = [(0, i[0] + self.configuration["class_id_offset"]) + i[1:] for i in y]
         y = np.array(y, dtype=np.float32)
 
         x = torch.from_numpy(x)
@@ -84,7 +84,7 @@ class Dataset(Dataset):
             if os.path.exists(y):
                 for line in open(y, "r").readlines():
                     line = line.split(" ")
-                    key = int(line[0])
+                    key = int(line[0]) + self.configuration["class_id_offset"]
                     if key not in distribution:
                         distribution[key] = 0
                     distribution[key] += 1
