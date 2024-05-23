@@ -95,10 +95,10 @@ class ShuffleNetV2(nn.Module):
                 input_channel = output_channel
             setattr(self, stage_names[idxstage], nn.Sequential(*stageSeq))
         
-        if load_param == False:
+        if load_param:
             self._initialize_weights()
-        else:
-            print("load param...")
+        # else:
+        #     print("load param...")
 
     def forward(self, x):
         x = self.first_conv(x)
@@ -110,5 +110,5 @@ class ShuffleNetV2(nn.Module):
         return P1, P2, P3
 
     def _initialize_weights(self):
-        print("Initialize params from:%s"%"./weights/shufflenetv2.pth")
+        print("Loading pretrained backbone weights from ./weights/shufflenetv2.pth")
         self.load_state_dict(torch.load("./weights/shufflenetv2.pth"), strict = True)
