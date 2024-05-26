@@ -44,16 +44,18 @@ class ShuffleV2Block(nn.Module):
         else:
             self.branch_proj = None
 
+        self.floatFunctional = torch.nn.quantized.FloatFunctional()
+
     def forward(self, old_x):
         if self.stride==1:
             x_proj, x = self.channel_shuffle(old_x)
-            return torch.cat((x_proj, self.branch_main(x)), 1)
-            # return torch.nn.quantized.FloatFunctional().cat((x_proj, self.branch_main(x)), 1)
+            # return torch.cat((x_proj, self.branch_main(x)), 1)
+            return self.floatFunctional.cat((x_proj, self.branch_main(x)), 1)
         elif self.stride==2:
             x_proj = old_x
             x = old_x
-            return torch.cat((self.branch_proj(x_proj), self.branch_main(x)), 1)
-            # return torch.nn.quantized.FloatFunctional().cat((self.branch_proj(x_proj), self.branch_main(x)), 1)
+            # return torch.cat((self.branch_proj(x_proj), self.branch_main(x)), 1)
+            return self.floatFunctional.cat((self.branch_proj(x_proj), self.branch_main(x)), 1)
 
     def channel_shuffle(self, x):
         batchsize, num_channels, height, width = x.data.size()

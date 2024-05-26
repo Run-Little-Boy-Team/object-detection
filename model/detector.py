@@ -10,7 +10,7 @@ class Detector(nn.Module):
 
         self.category_num = category_num
 
-        # self.quant = torch.ao.quantization.QuantStub()
+        self.quant = torch.ao.quantization.QuantStub()
 
         self.stage_repeats = [4, 8, 4]
         self.stage_out_channels = [-1, 24, 48, 96, 192]
@@ -22,34 +22,34 @@ class Detector(nn.Module):
          
         self.detect_head = DetectHead(self.stage_out_channels[-2], category_num)
 
-        # self.dequant = torch.ao.quantization.DeQuantStub()
+        self.dequant = torch.ao.quantization.DeQuantStub()
+
+        self.floatFunctional = torch.nn.quantized.FloatFunctional()
 
     def forward(self, x):
-        # x = self.quant(x)
+        x = self.quant(x)
         P1, P2, P3 = self.backbone(x)
         P3 = self.upsample(P3)
         P1 = self.avg_pool(P1)
-        P = torch.cat((P1, P2, P3), dim=1)
-        # P = torch.nn.quantized.FloatFunctional().cat((P1, P2, P3), dim=1)
+        # P = torch.cat((P1, P2, P3), dim=1)
+        P = self.floatFunctional.cat((P1, P2, P3), dim=1)
 
         y = self.SPP(P)
         y = self.detect_head(y)
-        # y = self.dequant(y)
+        y = self.dequant(y)
 
         return y
     
     def reshape_category_num(self, category_num):
-        if category_num <= self.category_num:
-            i = category_num
-        else:
-            i = self.category_num
         new_conv2d = torch.nn.Conv2d(self.stage_out_channels[-2], category_num, 1, stride=1, padding=0, bias=False)    
-        new_conv2d.weight.data[:i, :, :, :] = self.detect_head.cls_layers.conv5x5[3].weight.data[:i, :, :, :]
         new_bn2d = torch.nn.BatchNorm2d(category_num)
-        new_bn2d.weight.data[:i] = self.detect_head.cls_layers.conv5x5[4].weight.data[:i]
-        new_bn2d.bias.data[:i] = self.detect_head.cls_layers.conv5x5[4].bias.data[:i]
-        new_bn2d.running_mean.data[:i] = self.detect_head.cls_layers.conv5x5[4].running_mean.data[:i]
-        new_bn2d.running_var.data[:i] = self.detect_head.cls_layers.conv5x5[4].running_var.data[:i]
+        if category_num >= self.category_num:
+            print("Keeping old weights")
+            new_conv2d.weight.data[:self.category_num, :, :, :] = self.detect_head.cls_layers.conv5x5[3].weight.data[:self.category_num, :, :, :]
+            new_bn2d.weight.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].weight.data[:self.category_num]
+            new_bn2d.bias.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].bias.data[:self.category_num]
+            new_bn2d.running_mean.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].running_mean.data[:self.category_num]
+            new_bn2d.running_var.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].running_var.data[:self.category_num]        
         new_conv5x5 = torch.nn.Sequential(
             self.detect_head.cls_layers.conv5x5[0],
             self.detect_head.cls_layers.conv5x5[1],
@@ -60,6 +60,30 @@ class Detector(nn.Module):
         device = next(self.parameters()).device
         self.detect_head.cls_layers.conv5x5 = new_conv5x5.to(device)
         self.category_num = category_num
+
+    def fuse_modules(self, qat=False, inplace=False):
+        self.eval()
+        fusing_list = [
+            line.strip().split(";")
+            for line in open("fusing_list.csv", "r").readlines()
+        ]
+        if qat:
+            fuse_function = torch.ao.quantization.fuse_modules_qat
+        else:
+            fuse_function = torch.ao.quantization.fuse_modules
+        if inplace:
+            fuse_function(
+                self,
+                fusing_list,
+                inplace=inplace,
+            )
+        else:
+            return fuse_function(
+                self,
+                fusing_list,
+                inplace=inplace,
+            )
+        
 
 if __name__ == "__main__":
     model = Detector(80, False)

@@ -7,14 +7,14 @@ train_path: ./dataset/COCO128_RLB_dataset/train
 test_path: ./dataset/COCO128_RLB_dataset/test
 epochs: 300
 batch_size: 128
-learning_rate: 0.000001 # 0.001
+learning_rate: 0.001
 milestones:
   - 100
   - 200
   - 250
 num_workers: 8
 
-iou_threshold: 0.5
+iou_threshold: 0.25
 confidence_threshold: 0.5
 
 class_id_offset: 0
