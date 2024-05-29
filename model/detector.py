@@ -49,7 +49,9 @@ class Detector(nn.Module):
             new_bn2d.weight.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].weight.data[:self.category_num]
             new_bn2d.bias.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].bias.data[:self.category_num]
             new_bn2d.running_mean.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].running_mean.data[:self.category_num]
-            new_bn2d.running_var.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].running_var.data[:self.category_num]        
+            new_bn2d.running_var.data[:self.category_num] = self.detect_head.cls_layers.conv5x5[4].running_var.data[:self.category_num]
+        else:
+            print("Droping old weights")  
         new_conv5x5 = torch.nn.Sequential(
             self.detect_head.cls_layers.conv5x5[0],
             self.detect_head.cls_layers.conv5x5[1],

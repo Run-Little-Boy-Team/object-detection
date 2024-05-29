@@ -3,8 +3,11 @@ log_level:
 pretrained: ./weights/weight_AP05_0.253207_280-epoch.pth
 checkpoint: 
 input_size: 352
-train_path: ./dataset/COCO128_RLB_dataset/train
-test_path: ./dataset/COCO128_RLB_dataset/test
+train_path: ./dataset/RLB_dataset/train
+test_path: ./dataset/RLB_dataset/test
+coco2017_train_path: ./dataset/COCO2017_dataset/train
+coco2017_test_path: ./dataset/COCO2017_dataset/test
+coco2017_proportion: 1.0 # 1.0 = 50% RLB, 50% COCO2017, 
 epochs: 300
 batch_size: 128
 learning_rate: 0.001
@@ -118,7 +121,7 @@ augmentation:
   horizontal_flip_probability: 0.25
   monochrome_probability: 0.5
   hue_probability: 0.25
-  hue_amplitude: 0.25
+  hue_amplitude: 0.1
   saturation_probability: 0.25
   saturation_amplitude: 0.25
   brightness_probability: 0.25

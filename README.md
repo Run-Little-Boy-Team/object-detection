@@ -35,15 +35,15 @@ Example of a single annotation file:
 14 0.509915014164 0.51 0.974504249292 0.972
 ```
 
-### RLB x COCO dataset
-- Download COCO dataset
-    - For training from scratch
-        - Download COCO 2017 train and val images/annotations from [here](https://cocodataset.org/#download)
-        - Use [JSON2YOLO](https://github.com/ultralytics/JSON2YOLO) to convert `instances_train2017.json` and `instances_val2017.json` to YOLO format
-    - For fine-tuning
-        - Download COCO 128 train and val images/annotation from [here](https://universe.roboflow.com/team-roboflow/coco-128)
-- Extract train images into a `train` folder, do the same for val images into a `test` folder
-- Copy converted train/val annotations to their respective folder
+### RLB dataset
 - Download [RLB dataset](https://github.com/)
 - Merge the content of `Augmented`, `Robot`, `Turret` and `Obstacle` folders into a `train` folder and the content of the `Test` folder into a `test` folder
-- Merge `test` folders from COCO and RLB together, do the same for the `train` folders
+- Move these folders into a `RLB_dataset` folder
+- Move `RLB_dataset` into the `dataset` folder of this repo
+
+### COCO2017 dataset
+- Download COCO 2017 train and val images/annotations from [here](https://cocodataset.org/#download)
+- Use [JSON2YOLO](https://github.com/ultralytics/JSON2YOLO) to convert `instances_train2017.json` and `instances_val2017.json` to YOLO format
+- Extract train images into a `train` folder, do the same for val images into a `test` folder
+- Move these folders into a `COCO2017_dataset` folder
+- Move `COCO2017_dataset` into the `dataset` folder of this repo

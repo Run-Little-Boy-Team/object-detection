@@ -14,10 +14,19 @@ class Dataset(Dataset):
     def __init__(self, configuration, test=False, augment=False):
         self.configuration = configuration
         self.test = test
+        coco2017_proportion = configuration["coco2017_proportion"]
         if self.test:
             self.x = glob.glob(configuration["test_path"] + "/*.jpg")
+            if coco2017_proportion > 0:
+                self.x += glob.glob(configuration["coco2017_test_path"] + "/*.jpg")[
+                    : int(len(self.x) * coco2017_proportion)
+                ]
         else:
             self.x = glob.glob(configuration["train_path"] + "/*.jpg")
+            if coco2017_proportion > 0:
+                self.x += glob.glob(configuration["coco2017_train_path"] + "/*.jpg")[
+                    : int(len(self.x) * coco2017_proportion)
+                ]
         self.y = [f"{os.path.splitext(file)[0]}.txt" for file in self.x]
         self.x.sort()
         self.y.sort()
@@ -102,7 +111,7 @@ class Dataset(Dataset):
     def show_distribution(self):
         distribution = self.distribution()
         plt.figure(figsize=(20, 5))
-        plt.title(f"{'Test' if self.test else 'Train'} distribution")
+        plt.title(f"{'Test' if self.test else 'Train'} data distribution")
         plt.bar(distribution.keys(), distribution.values())
         plt.xticks(rotation=270)
         plt.show()
