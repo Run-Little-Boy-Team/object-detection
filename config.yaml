@@ -10,7 +10,7 @@ coco2017_test_path: ./dataset/COCO2017_dataset/test
 coco2017_proportion: 1.0 # 1.0 = 50% RLB, 50% COCO2017, 
 epochs: 300
 batch_size: 128
-learning_rate: 0.001
+learning_rate: 0.0001
 milestones:
   - 100
   - 200

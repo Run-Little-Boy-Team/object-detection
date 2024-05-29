@@ -6,6 +6,7 @@ import sys
 import math
 import yaml
 import onnxruntime as ort
+import picamera2
 
 
 class Result:
@@ -249,22 +250,35 @@ class YOLO:
             print(f"Drawing: {drawing_time:.2f} ms")
 
     def stream(self, source: int | str) -> None:
-        cap = cv2.VideoCapture(source)
-        if not cap.isOpened():
-            print("Error opening video stream or file")
-            exit(0)
+        if source == "pi":
+            camera = picamera2.PiCamera2()
+            camera.start_preview()
+            preview_configuration = camera.create_preview_configuration()
+            camera.configure(preview_configuration)
+            camera.start()
+        else:
+            cap = cv2.VideoCapture(source)
+            if not cap.isOpened():
+                print("Error opening video stream or file")
+                exit(0)
 
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+            if source == "pi":
+                frame = camera.capture_array()
+            else:
+                ret, frame = cap.read()
+                if not ret:
+                    break
 
             self.run([frame], True)
 
             c = cv2.waitKey(1)
             if c == 27:
                 break
-        cap.release()
+        if source == "pi":
+            camera.stop()
+        else:
+            cap.release()
         cv2.destroyAllWindows()
         self.print_stats()
 
@@ -294,7 +308,7 @@ def print_help() -> None:
     print("--quiet : Disable most of console outputs")
     print(
         "--source <path-to-your-source-file> : Specify a file on which running"
-        " inferences, could be webcam (camera index), image (png, jpg or jpeg) or"
+        ' inferences, could be webcam (camera index, "pi" for Pi Camera), image (png, jpg or jpeg) or'
         " video (mp4 or avi)"
     )
     print("--help : print help")
@@ -332,17 +346,20 @@ if __name__ == "__main__":
             print_help()
             exit(0)
     yolo: YOLO = YOLO(model_path, configuration_path, gpu, verbose)
-    try:
-        webcam = int(source)
-        yolo.stream(webcam)
-    except ValueError:
-        videos = [".mp4", ".avi"]
-        for video in videos:
-            if source.endswith(video):
-                yolo.stream(source)
-                exit(0)
-        images = [".jpg", ".jpeg", ".png"]
-        for image in images:
-            if source.endswith(image):
-                yolo.run([source], True)
-                exit(0)
+    if source == "pi":
+        yolo.stream(source)
+    else:
+        try:
+            webcam = int(source)
+            yolo.stream(webcam)
+        except ValueError:
+            videos = [".mp4", ".avi"]
+            for video in videos:
+                if source.endswith(video):
+                    yolo.stream(source)
+                    exit(0)
+            images = [".jpg", ".jpeg", ".png"]
+            for image in images:
+                if source.endswith(image):
+                    yolo.run([source], True)
+                    exit(0)

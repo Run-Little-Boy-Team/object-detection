@@ -42,5 +42,18 @@ cp -rf $name/include/* /usr/local/include/
 rm -rf $name
 echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib >> /home/$1/.bashrc
 source /home/$1/.bashrc
+name="LCCV"
+url="https://github.com/kbarni/LCCV"
+echo "Cloning $url into $name"
+git clone $url $name
+cd $name
+echo "Compiling $name"
+mkdir build
+cd build
+cmake ..
+make -j4
+echo "Installing $name"
+sudo make install
+cd ../..
+rm -rf $name
 echo "Done"
-echo $usr

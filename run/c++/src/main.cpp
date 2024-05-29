@@ -19,7 +19,7 @@ void printHelp()
     cout << "--configuration <path-to-your-configuration-file> : Specify the configuration to use" << endl;
     cout << "--gpu : Enable GPU inferences" << endl;
     cout << "--quiet : Disable most of console outputs" << endl;
-    cout << "--source <path-to-your-source-file> : Specify a file on which running inferences, could be webcam (camera index), image (png, jpg or jpeg) or video (mp4 or avi)" << endl;
+    cout << "--source <path-to-your-source-file> : Specify a file on which running inferences, could be webcam (camera index, \"pi\" for Pi Camera), image (png, jpg or jpeg) or video (mp4 or avi)" << endl;
     cout << "--help : print help" << endl;
 }
 
@@ -64,30 +64,37 @@ int main(int argc, char *argv[])
         }
     }
     YOLO yolo(modelPath, configurationPath, gpu, verbose);
-    try
+    if (source == "pi")
     {
-        int webcam = stoi(source);
-        yolo.stream("", webcam);
+        yolo.stream(source, -1);
     }
-    catch (const invalid_argument &e)
+    else
     {
-        vector<string> videos = {".mp4", ".avi"};
-        for (string video : videos)
+        try
         {
-            if (endsWith(source, video))
-            {
-                yolo.stream(source, -1);
-                return 0;
-            }
+            int webcam = stoi(source);
+            yolo.stream("", webcam);
         }
-        vector<string> images = {".jpg", ".jpeg", ".png"};
-        for (string image : images)
+        catch (const invalid_argument &e)
         {
-            if (endsWith(source, image))
+            vector<string> videos = {".mp4", ".avi"};
+            for (string video : videos)
             {
-                vector<string> input = {source};
-                yolo.run(vector<string>(input), true);
-                return 0;
+                if (endsWith(source, video))
+                {
+                    yolo.stream(source, -1);
+                    return 0;
+                }
+            }
+            vector<string> images = {".jpg", ".jpeg", ".png"};
+            for (string image : images)
+            {
+                if (endsWith(source, image))
+                {
+                    vector<string> input = {source};
+                    yolo.run(vector<string>(input), true);
+                    return 0;
+                }
             }
         }
     }

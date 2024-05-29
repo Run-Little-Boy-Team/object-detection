@@ -291,29 +291,48 @@ void YOLO::showDetections(vector<vector<Result>> resultsList, vector<Mat> images
 void YOLO::stream(string video, int webcam)
 {
     VideoCapture cap;
-    if (video != "")
+    PiCamera camera;
+    if (video == "pi")
     {
-        cap = VideoCapture(video);
-    }
-    else if (webcam >= 0)
-    {
-        cap = VideoCapture(webcam);
+        cam.startVideo();
     }
     else
     {
-        cout << "No stream source selected" << endl;
-    }
+        if (video != "")
+        {
+            cap = VideoCapture(video);
+        }
+        else if (webcam >= 0)
+        {
+            cap = VideoCapture(webcam);
+        }
+        else
+        {
+            cout << "No stream source selected" << endl;
+        }
 
-    if (!cap.isOpened())
-    {
-        cout << "Error opening video stream or file" << endl;
-        return;
+        if (!cap.isOpened())
+        {
+            cout << "Error opening video stream or file" << endl;
+            return;
+        }
     }
 
     while (true)
     {
         Mat frame;
-        cap >> frame;
+        if (video == "pi")
+        {
+            if (!cam.getVideoFrame(frame, 1000))
+            {
+                continue;
+            }
+        }
+        else
+        {
+            cap >> frame;
+        }
+
         if (frame.empty())
         {
             break;
@@ -329,7 +348,14 @@ void YOLO::stream(string video, int webcam)
             break;
         }
     }
-    cap.release();
+    if (video == "pi")
+    {
+        cam.stopVideo();
+    }
+    else
+    {
+        cap.release();
+    }
     destroyAllWindows();
     printStats();
 }
