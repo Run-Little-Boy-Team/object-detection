@@ -1,0 +1,3 @@
+[submodule "object-detection-inference"]
+	path = object-detection-inference
+	url = https://github.com/Run-Little-Boy-Team/object-detection-inference
