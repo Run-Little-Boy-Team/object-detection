@@ -50,3 +50,6 @@ Example of a single annotation file:
 
 ### Context augmentation
 [https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset](https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset)
+
+### Optimizations
+[https://convertmodel.com/](https://convertmodel.com/)
