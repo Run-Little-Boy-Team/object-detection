@@ -10,8 +10,6 @@ class Detector(nn.Module):
 
         self.category_num = category_num
 
-        self.quant = torch.ao.quantization.QuantStub()
-
         self.stage_repeats = [4, 8, 4]
         self.stage_out_channels = [-1, 24, 48, 96, 192]
         self.backbone = ShuffleNetV2(self.stage_repeats, self.stage_out_channels, load_param)
@@ -22,21 +20,14 @@ class Detector(nn.Module):
          
         self.detect_head = DetectHead(self.stage_out_channels[-2], category_num)
 
-        self.dequant = torch.ao.quantization.DeQuantStub()
-
-        self.floatFunctional = torch.nn.quantized.FloatFunctional()
-
     def forward(self, x):
-        x = self.quant(x)
         P1, P2, P3 = self.backbone(x)
         P3 = self.upsample(P3)
         P1 = self.avg_pool(P1)
-        # P = torch.cat((P1, P2, P3), dim=1)
-        P = self.floatFunctional.cat((P1, P2, P3), dim=1)
+        P = torch.cat((P1, P2, P3), dim=1)
 
         y = self.SPP(P)
         y = self.detect_head(y)
-        y = self.dequant(y)
 
         return y
     

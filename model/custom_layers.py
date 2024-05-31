@@ -64,8 +64,6 @@ class SPP(nn.Module):
                                    
         self.relu = nn.ReLU(inplace=True)
 
-        self.floatFunctional = torch.nn.quantized.FloatFunctional()
-
     def forward(self, x):    
         x = self.Conv1x1(x)
 
@@ -73,11 +71,8 @@ class SPP(nn.Module):
         y2 = self.S2(x)
         y3 = self.S3(x)
 
-        # y = torch.cat((y1, y2, y3), dim=1)
-        y = self.floatFunctional.cat((y1, y2, y3), dim=1)
-        # y = self.relu(x + self.output(y))
-        y = self.floatFunctional.add(x, self.output(y))
-        y = self.relu(y)
+        y = torch.cat((y1, y2, y3), dim=1)
+        y = self.relu(x + self.output(y))
 
         return y
 
@@ -102,5 +97,4 @@ class DetectHead(nn.Module):
         reg = self.reg_layers(x)
         cls = self.softmax(self.cls_layers(x))
 
-        # return torch.cat((obj, reg, cls), dim =1)
-        return self.floatFunctional.cat((obj, reg, cls), dim =1)
+        return torch.cat((obj, reg, cls), dim =1)
