@@ -15,7 +15,7 @@ class Conv1x1(nn.Module):
 class Head(nn.Module):
     def __init__(self, input_channels, output_channels):
         super(Head, self).__init__()
-        self.conv5x5 = nn.Sequential(nn.Conv2d(input_channels, input_channels, 5, 1, 2, groups = input_channels, bias = False),
+        self.conv5x5 = nn.Sequential(nn.Conv2d(input_channels, input_channels, 5, 1, 2, groups = 1, bias = False),
                                      nn.BatchNorm2d(input_channels),
                                      nn.ReLU(inplace=True),
 
@@ -31,29 +31,29 @@ class SPP(nn.Module):
         super(SPP, self).__init__()
         self.Conv1x1 = Conv1x1(input_channels, output_channels)
 
-        self.S1 =  nn.Sequential(nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = output_channels, bias = False),
+        self.S1 =  nn.Sequential(nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = 1, bias = False),
                                  nn.BatchNorm2d(output_channels),
                                  nn.ReLU(inplace=True)
                                  )
 
-        self.S2 =  nn.Sequential(nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = output_channels, bias = False),
+        self.S2 =  nn.Sequential(nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = 1, bias = False),
                                  nn.BatchNorm2d(output_channels),
                                  nn.ReLU(inplace=True),
 
-                                 nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = output_channels, bias = False),
+                                 nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = 1, bias = False),
                                  nn.BatchNorm2d(output_channels),
                                  nn.ReLU(inplace=True)
                                  )
 
-        self.S3 =  nn.Sequential(nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = output_channels, bias = False),
+        self.S3 =  nn.Sequential(nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = 1, bias = False),
                                  nn.BatchNorm2d(output_channels),
                                  nn.ReLU(inplace=True),
 
-                                 nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = output_channels, bias = False),
+                                 nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = 1, bias = False),
                                  nn.BatchNorm2d(output_channels),
                                  nn.ReLU(inplace=True),
 
-                                 nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = output_channels, bias = False),
+                                 nn.Conv2d(output_channels, output_channels, 5, 1, 2, groups = 1, bias = False),
                                  nn.BatchNorm2d(output_channels),
                                  nn.ReLU(inplace=True)
                                  )

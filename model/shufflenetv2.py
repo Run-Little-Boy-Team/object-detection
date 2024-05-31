@@ -21,7 +21,7 @@ class ShuffleV2Block(nn.Module):
             nn.BatchNorm2d(mid_channels),
             nn.ReLU(inplace=True),
             # dw
-            nn.Conv2d(mid_channels, mid_channels, ksize, stride, pad, groups=mid_channels, bias=False),
+            nn.Conv2d(mid_channels, mid_channels, ksize, stride, pad, groups=1, bias=False),
             nn.BatchNorm2d(mid_channels),
             # pw-linear
             nn.Conv2d(mid_channels, outputs, 1, 1, 0, bias=False),
@@ -33,7 +33,7 @@ class ShuffleV2Block(nn.Module):
         if stride == 2:
             branch_proj = [
                 # dw
-                nn.Conv2d(inp, inp, ksize, stride, pad, groups=inp, bias=False),
+                nn.Conv2d(inp, inp, ksize, stride, pad, groups=1, bias=False),
                 nn.BatchNorm2d(inp),
                 # pw-linear
                 nn.Conv2d(inp, inp, 1, 1, 0, bias=False),
