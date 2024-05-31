@@ -47,3 +47,6 @@ Example of a single annotation file:
 - Extract train images into a `train` folder, do the same for val images into a `test` folder
 - Move these folders into a `COCO2017_dataset` folder
 - Move `COCO2017_dataset` into the `dataset` folder of this repo
+
+### Context augmentation
+[https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset](https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset)

@@ -42,6 +42,7 @@ class Augmentation:
         save_path: str = "./outputs",
         save_name: str = "augmented",
         context: bool = False,
+        context_resize: tuple[int, int] | None = None,
         backgrounds_path: str | None = None,
         backgrounds_color: tuple[int] | None = None,
     ) -> list[tuple[cv2.typing.MatLike, tuple[int]]] | None:
@@ -145,10 +146,10 @@ class Augmentation:
                         bbox,
                         backgrounds,
                         backgrounds_color,
+                        context_resize,
                         save,
                         save_path,
                         save_name,
-                        show,
                     ),
                 )
                 processes.append(process)
@@ -231,11 +232,13 @@ class Augmentation:
         bbox,
         backgrounds,
         backgrounds_color,
+        context_resize,
         save,
         save_path,
         save_name,
-        show,
     ):
+        if context_resize is not None:
+            image = cv2.resize(image, context_resize)
         bbox = [
             (
                 b[0],
@@ -256,13 +259,6 @@ class Augmentation:
                 cv2.imwrite(f"{filename}.jpg", image)
                 with open(f"{filename}.txt", "w") as file:
                     file.writelines([" ".join(map(str, b)) + "\n" for b in bbox])
-            # if show:
-            #     draw = utils.draw_annotation(image, bbox, self.configuration["classes"])
-            #     cv2.imshow(f"{self.name} - Press ESC to exit", draw)
-            #     key = cv2.waitKey(0)
-            #     if key == 27:
-            #         cv2.destroyAllWindows()
-            #         exit(0)
             self.logger.info(
                 f"Image {i}/{len(images)} augmented with background {j}/{len(backgrounds)}"
             )
@@ -598,17 +594,18 @@ if __name__ == "__main__":
     configuration = utils.load_configuration("config.yaml")
     augmentation = Augmentation(configuration)
 
-    images = glob.glob("./sample/*.jpg")
-    bboxes = glob.glob("./sample/*.txt")
+    images = glob.glob("../Augmentation/*.jpg")
+    bboxes = glob.glob("../Augmentation/*.txt")
     images.sort()
     bboxes.sort()
 
-    augmentation(images=images, bboxes=bboxes, show=True)
+    # augmentation(images=images, bboxes=bboxes, show=True)
 
     augmentation(
         context=True,
-        backgrounds_path="./sample/backgrounds",
-        backgrounds_color=(0, 0, 0),
+        backgrounds_path="../data",
+        backgrounds_color=(0, 255, 1),
+        context_resize=(960, 720),
         images=images,
         bboxes=bboxes,
         save=True,
