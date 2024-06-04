@@ -36,17 +36,18 @@ Example of a single annotation file:
 ```
 
 ### RLB dataset
-- Download [RLB dataset](https://github.com/)
-- Merge the content of `Augmented`, `Robot`, `Turret` and `Obstacle` folders into a `train` folder and the content of the `Test` folder into a `test` folder
+- Download [RLB dataset](https://drive.google.com/file/d/1vDyVj5ZQEs5FvUE8qdq8amT9hdrF1dfO/view?usp=sharing)
+- Extract the downloaded archive
+- Run the `build.sh` script to generate `train` and `test` folders
 - Move these folders into a `RLB_dataset` folder
-- Move `RLB_dataset` into the `dataset` folder of this repo
+- Move the `RLB_dataset` folder into the [dataset](./dataset) folder of this repo
 
 ### COCO2017 dataset
 - Download COCO 2017 train and val images/annotations from [here](https://cocodataset.org/#download)
 - Use [JSON2YOLO](https://github.com/ultralytics/JSON2YOLO) to convert `instances_train2017.json` and `instances_val2017.json` to YOLO format
 - Extract train images into a `train` folder, do the same for val images into a `test` folder
 - Move these folders into a `COCO2017_dataset` folder
-- Move `COCO2017_dataset` into the `dataset` folder of this repo
+- Move the `COCO2017_dataset` folder into the [dataset](./dataset) folder of this repo
 
 ### Context augmentation
 [https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset](https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset)
