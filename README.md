@@ -4,7 +4,7 @@ Based on [FastestDet by dog-qiuqiu](https://github.com/dog-qiuqiu/FastestDet/).
 
 ## Requirements
 
-Run [train_env.sh](./train_env.sh) to create a Conda environment.
+Run [install.sh](./install.sh) to create a Conda environment and to install other dependencies.
 
 ## Dataset
 
@@ -42,6 +42,9 @@ Example of a single annotation file:
 - Move these folders into a `RLB_dataset` folder
 - Move the `RLB_dataset` folder into the [dataset](./dataset) folder of this repo
 
+#### Note
+This dataset contains augmented data using [this dataset](https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset) as background images.
+
 ### COCO2017 dataset
 - Download COCO 2017 train and val images/annotations from [here](https://cocodataset.org/#download)
 - Use [JSON2YOLO](https://github.com/ultralytics/JSON2YOLO) to convert `instances_train2017.json` and `instances_val2017.json` to YOLO format
@@ -49,8 +52,12 @@ Example of a single annotation file:
 - Move these folders into a `COCO2017_dataset` folder
 - Move the `COCO2017_dataset` folder into the [dataset](./dataset) folder of this repo
 
-### Context augmentation
-[https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset](https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset)
+
 
 ### Optimizations
-[https://convertmodel.com/](https://convertmodel.com/)
+Use [onnx_to_int8_ncnn.sh](./onnx_to_int8_ncnn.sh).
+
+Example for a `model.onnx` file:
+```bash
+./onnx_to_int8_ncnn.sh ./checkpoints/2024-06-04_16-18-39/20_0.24095053259538232/model # Without ".onnx" file extension
+```
