@@ -56,7 +56,14 @@ class CocoDetectionEvaluator():
         coco_eval.accumulate()
         coco_eval.summarize()
         mAP05 = coco_eval.stats[1]
-        return mAP05
+
+        per_category_AP05 = {}
+        for cat_id in coco_gt.getCatIds():
+            cat_name = coco_gt.loadCats(cat_id)[0]['name']
+            ap = coco_eval.eval['precision'][0, :, cat_id, 0, -1].mean()
+            per_category_AP05[cat_name] = 0 if ap == -1.0 else ap
+
+        return mAP05, per_category_AP05
 
     def compute_map(self, val_dataloader, model):
         gts, pts = [], []
@@ -96,9 +103,9 @@ class CocoDetectionEvaluator():
                         tbboxes.append([category, x1, y1, x2, y2])
                 gts.append(np.array(tbboxes))
                 
-        mAP05 = self.coco_evaluate(gts, pts)
+        mAP05, per_category_AP05 = self.coco_evaluate(gts, pts)
 
-        return mAP05
+        return mAP05, per_category_AP05
     
 # 后处理(归一化后的坐标)
 def handle_preds(preds, device, conf_thresh=0.25, nms_thresh=0.45):
