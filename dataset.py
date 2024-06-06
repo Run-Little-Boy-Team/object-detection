@@ -17,15 +17,25 @@ class Dataset(Dataset):
         coco2017_proportion = configuration["coco2017_proportion"]
         if self.test:
             self.x = glob.glob(configuration["test_path"] + "/*.jpg")
-            if coco2017_proportion > 0:
+            if coco2017_proportion >= 1:
+                self.x = glob.glob(configuration["coco2017_test_path"] + "/*.jpg")
+            elif coco2017_proportion > 0:
+                to_add = int(
+                    len(self.x) * coco2017_proportion / (1 - coco2017_proportion)
+                )
                 self.x += glob.glob(configuration["coco2017_test_path"] + "/*.jpg")[
-                    : int(len(self.x) * coco2017_proportion)
+                    :to_add
                 ]
         else:
             self.x = glob.glob(configuration["train_path"] + "/*.jpg")
+            if coco2017_proportion >= 1:
+                self.x = glob.glob(configuration["coco2017_train_path"] + "/*.jpg")
             if coco2017_proportion > 0:
+                to_add = int(
+                    len(self.x) * coco2017_proportion / (1 - coco2017_proportion)
+                )
                 self.x += glob.glob(configuration["coco2017_train_path"] + "/*.jpg")[
-                    : int(len(self.x) * coco2017_proportion)
+                    :to_add
                 ]
         self.y = [f"{os.path.splitext(file)[0]}.txt" for file in self.x]
         self.x.sort()
