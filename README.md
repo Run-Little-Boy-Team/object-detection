@@ -59,5 +59,5 @@ Use [onnx_to_int8_ncnn.sh](./onnx_to_int8_ncnn.sh).
 
 Example for a `model.onnx` file:
 ```bash
-./onnx_to_int8_ncnn.sh ./checkpoints/2024-06-04_16-18-39/20_0.24095053259538232/model # Without ".onnx" file extension
+./onnx_to_int8_ncnn.sh ./checkpoints/2024-06-04_16-18-39/20_0.24095053259538232
 ```
