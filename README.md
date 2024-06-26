@@ -36,7 +36,7 @@ Example of a single annotation file:
 ```
 
 ### RLB dataset
-- Download [RLB dataset](https://drive.google.com/file/d/1vDyVj5ZQEs5FvUE8qdq8amT9hdrF1dfO/view?usp=sharing)
+- Download [RLB dataset](https://mega.nz/file/ps8TELbD#CL0il7vZQ59SV_JL0k-2LRzmNhyvitwhoV9vAenJTn0)
 - Extract the downloaded archive
 - Run the `build.sh` script to generate `train` and `test` folders
 - Move these folders into a `RLB_dataset` folder
